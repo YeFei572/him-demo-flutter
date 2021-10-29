@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:him_demo/models/user_friend_item.dart';
-import 'package:him_demo/pages/alerts/alerts_controller.dart';
+import 'package:him_demo/pages/home/home_controller.dart';
 
 import 'friend_controller.dart';
 
 class FriendPage extends GetView<FriendController> {
   @override
   Widget build(BuildContext context) {
-    AlertsController aController = Get.find();
+    HomeController aController = Get.find();
     return GetBuilder<FriendController>(
       builder: (controller) => Scaffold(
         body: Container(
@@ -24,7 +24,7 @@ class FriendPage extends GetView<FriendController> {
                   aController.targetId = item.friendUid;
                   aController.targetName = item.user.name;
                   aController.msgList.clear();
-                  aController.startConnection();
+                  aController.startWebSocket();
                   aController.update();
                   Get.back();
                 },

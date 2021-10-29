@@ -17,8 +17,8 @@ class DashboardPage extends StatelessWidget {
           child: IndexedStack(
             index: controller.tabIndex,
             children: [
-              AlertsPage(),
               HomePage(),
+              AlertsPage(),
               PostsPage(),
               AccountPage(),
             ],
@@ -31,13 +31,14 @@ class DashboardPage extends StatelessWidget {
           type: BottomNavigationBarType.fixed,
           items: [
             BottomNavigationBarItem(
+              icon: Icon(Icons.home),
+              label: "即时通讯",
+            ),
+            BottomNavigationBarItem(
               icon: Icon(Icons.add_alert),
               label: "警告",
             ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home),
-              label: "主页",
-            ),
+
             BottomNavigationBarItem(
               icon: Icon(Icons.local_post_office),
               label: "帖子",

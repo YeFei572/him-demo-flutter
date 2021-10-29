@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:him_demo/proto/WSBaseReqProto.pb.dart';
@@ -62,4 +63,6 @@ class LengthFieldPrepender {
       return WSBaseResProto.fromBuffer(msg.sublist(4, msg.length));
     }
   }
+
+
 }

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
 import 'package:get/get.dart';
 import 'package:him_demo/proto/WSBaseResProto.pb.dart';
+import 'package:him_demo/routes/app_routes.dart';
 
 import 'alerts_controller.dart';
 
@@ -15,9 +16,17 @@ class AlertsPage extends GetView<AlertsController> {
               ? buildDialogWidget(controller)
               : buildLoginWidget(controller),
           appBar: AppBar(
+            automaticallyImplyLeading: false,
+            actions: [
+              IconButton(
+                icon: Icon(Icons.people_alt_rounded),
+                onPressed: () => Get.toNamed(AppRoutes.FRIENDLIST),
+              )
+            ],
             centerTitle: true,
             title: controller.loginFlag
-                ? Text('张三', style: TextStyle(color: Colors.white))
+                ? Text(controller.targetName,
+                    style: TextStyle(color: Colors.white))
                 : Text('登陆', style: TextStyle(color: Colors.white)),
             backgroundColor: Colors.green,
           ),
@@ -39,6 +48,7 @@ class AlertsPage extends GetView<AlertsController> {
                 Container(
                   margin: EdgeInsets.only(bottom: 50.w),
                   child: TextFormField(
+                    initialValue: '6',
                     onSaved: (val) {
                       controller.username = val!;
                     },
@@ -50,6 +60,7 @@ class AlertsPage extends GetView<AlertsController> {
                   ),
                 ),
                 TextFormField(
+                  initialValue: '123',
                   onSaved: (val) {
                     controller.password = val!;
                   },

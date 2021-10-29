@@ -1,4 +1,3 @@
-import 'package:fixnum/fixnum.dart';
 import 'package:get/get.dart';
 import 'package:him_demo/library/api_request.dart';
 import 'package:him_demo/models/user_login_res.dart';

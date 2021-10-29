@@ -10,6 +10,8 @@ import 'package:him_demo/proto/WSBaseReqProto.pb.dart';
 import 'package:him_demo/proto/WSBaseResProto.pbserver.dart';
 import 'package:him_demo/proto/WSMessageResProto.pb.dart';
 import 'package:him_demo/proto/WSUserResProto.pb.dart';
+import 'package:him_demo/routes/app_routes.dart';
+import 'package:him_demo/utils/encodec_utils.dart';
 import 'package:him_demo/utils/length_field_prepender.dart';
 
 import 'alerts_service.dart';
@@ -17,8 +19,10 @@ import 'alerts_service.dart';
 class AlertsController extends GetxController {
   late String username;
   late String password;
-  late int targetId;
+  late String targetName = '';
+  late int targetId = -1;
   late int currentUid;
+  late bool connectFlag = false;
 
   late ScrollController scrollController;
 
@@ -33,7 +37,6 @@ class AlertsController extends GetxController {
 
   @override
   void onInit() {
-    targetId = 6;
     super.onInit();
   }
 
@@ -49,8 +52,7 @@ class AlertsController extends GetxController {
           loginFlag = true;
           currentUid = data.uid;
           update();
-          // 登陆成功后就开始发起双工通讯
-          this.startConnection(data.sid, data.uid);
+          Get.toNamed(AppRoutes.FRIENDLIST);
         },
         onError: (error) {
           print(error.toString());
@@ -61,20 +63,29 @@ class AlertsController extends GetxController {
 
   Future refreshPage() async {}
 
-  void startConnection(String sid, int uid) async {
+  void startConnection() async {
+    /// 判断当前是否已经登陆并连接， 如果已经登陆并链接就不做处理，如果没有则往下执行。
+    if (connectFlag) {
+      return;
+    }
+    UserLoginRes info = store.read('userInfo');
     await Socket.connect('172.16.0.193', 9002).then((socket) {
+      connectFlag = true;
+      update();
+
       /// 创建连接鉴权
-      socket.add(buildWSBaseReqProto(1, sid, uid));
+      socket.add(buildWSBaseReqProto(1, info.sid, info.uid));
 
       /// 开始维持心跳, 每30s进行一次心跳连接
       Timer.periodic(Duration(seconds: 30), (timer) {
-        socket.add(buildWSBaseReqProto(0, sid, uid));
+        socket.add(buildWSBaseReqProto(0, info.sid, info.uid));
       });
 
       /// 开始监听socket记录
       socket.listen((event) {
         LengthFieldPrepender lengthFieldPrepender = LengthFieldPrepender(1);
         WSBaseResProto res = lengthFieldPrepender.decode(event);
+
         msgList.add(res);
         update();
       });
@@ -90,11 +101,14 @@ class AlertsController extends GetxController {
     } else {
       wsBaseReqProto.type = 0;
     }
-    LengthFieldPrepender params = LengthFieldPrepender(1);
-    return params.encode(wsBaseReqProto);
+    return getProtocBufferData(wsBaseReqProto.writeToBuffer());
   }
 
   void sendMsg() {
+    if (targetId == -1) {
+      Get.snackbar('警告', '请先选择聊天对象！侧滑可以看到聊天列表！');
+      return;
+    }
     var res = sendController.text;
 
     /// 整理自己发出的消息到列表中去

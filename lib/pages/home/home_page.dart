@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:fixnum/fixnum.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_screenutil/flutter_screenutil.dart';
@@ -111,14 +112,26 @@ class HomePage extends GetView<HomeController> {
                 ),
               ),
             ),
-            Divider(height: 2.0),
             Container(
-              padding: EdgeInsets.symmetric(horizontal: 10.w),
-              decoration: BoxDecoration(border: Border.all(color: Colors.red)),
-              height: 70.w,
-              // 构建发送消息界面
-              child: onBuildSendGroup(ctx),
-            )
+                padding: EdgeInsets.symmetric(horizontal: 10.w),
+                height: 70.w,
+                // 构建发送消息界面
+                child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.center,
+                    children: [
+                      Expanded(child: onBuildSendGroup(ctx)),
+                      InkWell(
+                          child: Container(
+                            margin: EdgeInsets.symmetric(horizontal: 20.w),
+                            child: Icon(Icons.send,
+                                size: 40.sp, color: Color(0xff989696)),
+                          ),
+                          onTap: controller.sendMsg),
+                      InkWell(
+                          onTap: controller.addFile,
+                          child: Icon(Icons.add,
+                              size: 40.sp, color: Color(0xff989696))),
+                    ]))
           ],
         ),
       ),
@@ -128,35 +141,16 @@ class HomePage extends GetView<HomeController> {
   Widget onBuildSendGroup(BuildContext ctx) {
     return TextField(
       controller: controller.sendController,
+      maxLines: 2,
       decoration: InputDecoration(
-        suffixIcon: Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            GestureDetector(
-              child: Icon(
-                Icons.send,
-                size: 55.w,
-              ),
-              onTap: controller.sendMsg,
-            ),
-            GestureDetector(
-              child: Icon(
-                Icons.add,
-                size: 55.w,
-              ),
-              onTap: controller.addFile,
-            )
-          ],
-        ),
-        contentPadding: EdgeInsets.symmetric(horizontal: 10.w),
+        contentPadding: EdgeInsets.all(10.w),
         enabledBorder: OutlineInputBorder(
-          // borderSide: BorderSide(color: Colors.red),
           borderSide: BorderSide(color: Color(0x00FF0000)),
-          borderRadius: BorderRadius.all(Radius.circular(8)),
+          borderRadius: BorderRadius.all(Radius.circular(5)),
         ),
         focusedBorder: OutlineInputBorder(
-          borderSide: BorderSide(color: Color(0x00000000)),
-          borderRadius: BorderRadius.all(Radius.circular(8)),
+          borderSide: BorderSide(color: Color(0xffe0e0e0)),
+          borderRadius: BorderRadius.all(Radius.circular(5)),
         ),
       ),
     );
@@ -168,6 +162,7 @@ class HomePage extends GetView<HomeController> {
     return Container(
       padding: EdgeInsets.all(20.w),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisAlignment:
             msgFromOthers ? MainAxisAlignment.start : MainAxisAlignment.end,
         children: msgFromOthers
@@ -199,7 +194,10 @@ class HomePage extends GetView<HomeController> {
         margin: msgFromOthers
             ? EdgeInsets.only(left: 20.w)
             : EdgeInsets.only(right: 20.w),
-        child: Text(item.message.msgContent),
+        child: item.message.msgType == msgType.txtMsg.index
+            ? Text(item.message.msgContent)
+            : CachedNetworkImage(
+                imageUrl: item.message.msgContent, width: 200.w, height: 200.w),
       ),
     );
   }

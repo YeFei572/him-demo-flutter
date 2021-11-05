@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart' as MultipartFile;
@@ -16,6 +17,15 @@ import 'package:him_demo/proto/WSUserResProto.pb.dart';
 import 'package:him_demo/routes/app_routes.dart';
 import 'package:him_demo/utils/websocket_manager.dart';
 import 'package:image_picker/image_picker.dart';
+
+enum msgType {
+  // 消息类型（0：普通文字消息，1：图片消息，2：文件消息，3：语音消息，4：视频消息）
+  txtMsg,
+  picMsg,
+  fileMsg,
+  voiceMsg,
+  videoMsg
+}
 
 class HomeController extends GetxController {
   late String username;
@@ -100,12 +110,30 @@ class HomeController extends GetxController {
 
   void addFile() async {
     final ImagePicker _picker = ImagePicker();
-       XFile? image = await _picker.pickImage(source: ImageSource.gallery);
+    final XFile? image = await _picker.pickImage(source: ImageSource.gallery);
     final String token = '2vE3ykFomT8qt0rmkGctu6Q9S83Oj7It';
-    print('~~~${image!.name}~~~~~~~~~~~${image!.path}');
-    var file = await MultipartFile.MultipartFile.fromFile(image!.path, filename: image!.name);
+    var file = await MultipartFile.MultipartFile.fromFile(image!.path,
+        filename: image.name);
     HomeService.uploadFile(token, {'smfile': file}, onSuccess: (data) {
-      print('===========${data.data}');
+      var res = json.decode(data);
+      String imgUrl = '';
+      if (res['images'] != null) {
+        imgUrl = res['images'];
+      }
+      if (res['images'] == null &&
+          res['data']['url'] != null &&
+          res['data']['url'] != '') {
+        imgUrl = res['data']['url'];
+      }
+      // 开始发送图片消息到服务器
+      WSBaseResProto params = createOwnMsg(imgUrl, msgType.picMsg);
+      msgList.add(params);
+
+      /// 开始发送ajax消息
+      UserLoginRes userInfo = store.read('userInfo');
+      AlertsService().sendMsg(imgUrl, targetId, msgType.picMsg.index,
+          userInfo.uid.toString(), userInfo.sid);
+      update();
     });
   }
 
@@ -121,23 +149,23 @@ class HomeController extends GetxController {
     }
 
     /// 整理自己发出的消息到列表中去
-    msgList.add(createOwnMsg(res));
+    msgList.add(createOwnMsg(res, msgType.txtMsg));
 
     /// 开始发送ajax消息
     UserLoginRes userInfo = store.read('userInfo');
     AlertsService()
-        .sendMsg(res, targetId, 0, userInfo.uid.toString(), userInfo.sid);
+        .sendMsg(res, targetId, msgType.txtMsg.index, userInfo.uid.toString(), userInfo.sid);
     sendController.clear();
     update();
   }
 
-  WSBaseResProto createOwnMsg(String msg) {
+  WSBaseResProto createOwnMsg(String msg, msgType msgType) {
     WSBaseResProto wsBaseResProto = WSBaseResProto.create();
     wsBaseResProto.createTime = DateTime.now().toString();
     WSMessageResProto messageResProto = WSMessageResProto.create();
     messageResProto.msgContent = msg;
-    // 消息类型（0：普通文字消息，1：图片消息，2：文件消息，3：语音消息，4：视频消息）
-    messageResProto.msgType = 0;
+
+    messageResProto.msgType = msgType.index;
     messageResProto.receiveId = Int64(targetId);
     wsBaseResProto.message = messageResProto;
     WSUserResProto wsUserResProto = WSUserResProto.create();
